@@ -3,6 +3,9 @@
 #  1) thrift API/Web UI
 #  2) hbase master (which runs the local region server)
 
+sed -i 's/$HOSTNAME/'"$HOSTNAME"'/' /opt/hbase/conf/hbase-site.xml
+sed -i 's/$HOSTNAME/'"$HOSTNAME"'/' /opt/hbase/conf/zoo.cfg
+
 logs_dir=/data/logs
 
 mkdir -p $logs_dir /data/hbase /data/run

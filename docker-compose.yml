@@ -1,0 +1,7 @@
+hbase:
+  build: .
+  environment:
+    - HOSTNAME=${DOCKER_MACHINE_NAME}
+  net: "host"
+  volumes:
+   - .:/data
