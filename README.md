@@ -76,7 +76,7 @@ Get the container name and use it in the next command to execute the HBASE shell
     $ docker exec -it hbasedocker_hbase_1 /opt/hbase/bin/hbase shell
 
 
-Test HBase is working via python over Thrift
+Test HBASE is working via python over Thrift
 --------------------------------------------
 
 Here I am connecting to a docker container with the name 'dm-test'. The port 9090 is the
@@ -116,6 +116,24 @@ Thrift API port because [Happybase][1] [2] uses Thrift to talk to HBase.
 
 (Simple install for happybase: `sudo pip install happybase` although I
 use `pip install --user happybase` to get it just for me)
+
+
+Stop HBASE service
+------------------
+
+    $ docker-compose stop
+
+
+Start HBASE service
+-------------------
+
+    $ docker-compose start
+
+Remove HBASE container
+----------------------
+
+    $ docker-compose rm
+
 
 Notes
 -----
