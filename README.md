@@ -19,11 +19,11 @@ You can use the VM name that you like. Once the VM is created, setup the environ
 
     $ eval `docker-machine env localvm`
 
-So you are one step away yet to configure your host to be able to work with HBASE from your host. Your `/etc/hosts` and the one running inside the VM you just created must be updated to be able to resolve the hostname properly when. For such a thing, I created a shell script that takes care of it:
+So you are one step away yet to configure your host to be able to work with HBASE from your host. Your `/etc/hosts` and the one inside the VM you just created must be updated to be able to resolve the hostname properly. For such a thing, I created a shell script that takes care of it:
 
     $ ./prepare-localenv.sh
 
-This script will add a new entry (or update in case it already exists) in your `/etc/hosts` with the name `hbase-docker` resolving to the IP address of the VM created previously. This step will ask you for the root password. It also updates the VM's `/etc/hosts` with the same entry. That hostname (`hbase-docker`) will be the hostname to use when connecting to the HBASE server. Internally, it uses `DOCKER_MACHINE_NAME` variable to know the VM to update.
+This script will add a new entry (or update in case it already exists) in your `/etc/hosts` with the name `hbase-docker` resolving to the IP address of the VM created previously. This step will ask you for the root password. It also updates the VM's `/etc/hosts` with the same entry. That hostname (`hbase-docker`) will be the one to use when connecting to the HBASE server. Internally, it uses `DOCKER_MACHINE_NAME` variable to know the VM to update.
 
 
 Run HBASE
