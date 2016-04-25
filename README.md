@@ -119,7 +119,7 @@ Thrift API port because [Happybase][1] [2] uses Thrift to talk to HBase.
 use `pip install --user happybase` to get it just for me)
 
 
-Test HBASE from your host via Scala running on your host:
+Test HBASE via Scala running on your host:
 ---------------------------------------------------------
 This sample does not use Thrift interface. Source code:
 
