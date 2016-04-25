@@ -80,7 +80,7 @@ Get the container name and use it in the next command to execute the HBASE shell
 Test HBASE is working via python over Thrift
 --------------------------------------------
 
-Here I am connecting to a docker container with the name 'localvm'. The port 9090 is the
+Here I am connecting to a docker container with the name 'hbase-docker'. The port 9090 is the
 Thrift API port because [Happybase][1] [2] uses Thrift to talk to HBase.
 
     $ ipython
@@ -95,7 +95,7 @@ Thrift API port because [Happybase][1] [2] uses Thrift to talk to HBase.
 
     In [1]: import happybase
 
-    In [2]: connection = happybase.Connection('localvm', 9090)
+    In [2]: connection = happybase.Connection('hbase-docker', 9090)
 
     In [3]: connection.create_table('table-name', { 'family': dict() } )
 
