@@ -30,7 +30,7 @@ Find HBASE status
 
 As we are running the HBASE container with "host" networking, you should access the IP of the VM you created previously:
 
-    $ dm ip dm-test
+    $ docker-machine ip dm-test
 
 Master status:
 
