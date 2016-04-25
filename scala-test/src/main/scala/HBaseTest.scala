@@ -6,12 +6,11 @@ import org.apache.hadoop.hbase.util.Bytes
 
 object HBaseTest extends App {
 
+    val config = HBaseConfiguration.create()
+    config.set("hbase.zookeeper.quorum", "hbase-docker")
+    config.set("hbase.zookeeper.property.clientPort", "2181")
 
     def createTable(name: String) {
-        val config = HBaseConfiguration.create()
-        config.set("hbase.zookeeper.quorum", "hbase-docker")
-        config.set("hbase.zookeeper.property.clientPort", "2181")
-
         val tableName = name
         val hbaseAdmin = new HBaseAdmin(config)
         val family = Bytes.toBytes("f1")
@@ -20,7 +19,10 @@ object HBaseTest extends App {
             val desc = new HTableDescriptor(tableName)
             desc.addFamily(new HColumnDescriptor(family))
             hbaseAdmin.createTable(desc)
-            println("table created: " + tableName)
+            println(s"Table '$tableName' created")
+        }
+        else {
+            println(s"Table '$tableName' already exists")
         }
 
         val table = new HTable(config, tableName)
@@ -35,6 +37,21 @@ object HBaseTest extends App {
         table.close()
     }
 
+    def dropTable(name: String) {
+        val tableName = name
+        val hbaseAdmin = new HBaseAdmin(config)
+
+        if (hbaseAdmin.tableExists(tableName)) {
+            hbaseAdmin.disableTable(tableName)
+            hbaseAdmin.deleteTable(tableName)
+            println(s"Table '$tableName' deleted")
+        }
+        else {
+            println(s"Table '$tableName' does not exist")
+        }
+    }
+
     createTable("mytable")
 
+    dropTable("mytable")
 }
