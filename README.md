@@ -2,22 +2,28 @@ HBase in Docker
 ===============
 
 This configuration builds a docker container to run HBase (with
-embedded Zookeeper) running on the files inside the container.
+embedded Zookeeper) in Standalone mode which data are located locally in your host.
 
 NOTE
 ----
 
-This is a fork from https://github.com/dajobe/hbase-docker which adds docker-machine and docker-compose tools to the recipe.
+This is a fork from https://github.com/dajobe/hbase-docker which adds docker-machine and docker-compose tools to the recipe. It uses a container with "host" network option to avoid accessing problems with dynamic ports open during the normal HBASE use.
 
 Create local VM where to run HBASE on
 -------------------------------------
 
-    $ docker-machine create -d virtualbox --virtualbox-memory 4096 --virtualbox-boot2docker-url=https://github.com/boot2docker/boot2docker/releases/download/v1.9.0/boot2docker.iso dm-test
+    $ docker-machine create -d virtualbox --virtualbox-memory 4096 --virtualbox-boot2docker-url=https://github.com/boot2docker/boot2docker/releases/download/v1.9.0/boot2docker.iso localvm
 
 I am using 1.9.0 image due to a bug found with the 1.9.1 image (https://github.com/docker/docker/issues/18180).
-You can use the VM name that you like. I used `dm-test`. If you changed it, you need to change it also in the next commands in this guide. Once the VM is created, setup the environment variables to connect your current command line session to the docker engine running in the new VM:
+You can use the VM name that you like. Once the VM is created, setup the environment variables to connect your current command line session to the docker engine running in the new VM:
 
-    $ eval `docker-machine env dm-test`
+    $ eval `docker-machine env localvm`
+
+So you are one step away yet to configure your host to be able to work with HBASE from your host. Your `/etc/hosts` and the one running inside the VM you just created must be updated to be able to resolve the hostname properly when. For such a thing, I created a shell script that takes care of it:
+
+    $ ./prepare-localenv.sh
+
+This script will add a new entry (or update in case it already exists) in your `/etc/hosts` with the name `hbase-docker` resolving to the IP address of the VM created previously. This step will ask you for the root password. It also updates the VM's `/etc/hosts` with the same entry. That hostname (`hbase-docker`) will be the hostname to use when connecting to the HBASE server. Internally, it uses `DOCKER_MACHINE_NAME` variable to know the VM to update.
 
 
 Run HBASE
@@ -30,19 +36,15 @@ Find HBASE status
 
 As we are running the HBASE container with "host" networking, you should access the IP of the VM you created previously:
 
-    $ docker-machine ip dm-test
+    $ docker-machine ip localvm
 
 Master status:
 
-    http://<dm-test-ip>:16010/master-status
-
-Region server status:
-
-    http://<dm-test-ip>:16030/rs-status
+    http://<localvm-ip>:16010/master-status
 
 Thrift UI:
 
-    http://<dm-test-ip>:9095/thrift.jsp
+    http://<localvm-ip>:9095/thrift.jsp
 
 
 See HBASE Logs
@@ -53,8 +55,7 @@ To see all the logs since the HBase server started, use:
     $ docker-compose logs
 
 
-To see the individual log files without using `docker`, look into
-the data volume dir eg $PWD/data/logs if invoked as above.
+To see the individual log files without using `docker`, look into the directory `$PWD/logs`.
 
 
 Connect to the HBASE shell
@@ -79,7 +80,7 @@ Get the container name and use it in the next command to execute the HBASE shell
 Test HBASE is working via python over Thrift
 --------------------------------------------
 
-Here I am connecting to a docker container with the name 'dm-test'. The port 9090 is the
+Here I am connecting to a docker container with the name 'localvm'. The port 9090 is the
 Thrift API port because [Happybase][1] [2] uses Thrift to talk to HBase.
 
     $ ipython
@@ -94,7 +95,7 @@ Thrift API port because [Happybase][1] [2] uses Thrift to talk to HBase.
 
     In [1]: import happybase
 
-    In [2]: connection = happybase.Connection('dm-test', 9090)
+    In [2]: connection = happybase.Connection('localvm', 9090)
 
     In [3]: connection.create_table('table-name', { 'family': dict() } )
 
@@ -118,6 +119,49 @@ Thrift API port because [Happybase][1] [2] uses Thrift to talk to HBase.
 use `pip install --user happybase` to get it just for me)
 
 
+Test HBASE from your host via Scala running on your host:
+---------------------------------------------------------
+This sample does not use Thrift interface. Source code:
+
+
+    import org.apache.hadoop.hbase.{HColumnDescriptor, HTableDescriptor, HBaseConfiguration}
+    import org.apache.hadoop.hbase.client.{Put, HTable, HBaseAdmin}
+    import org.apache.hadoop.hbase.util.Bytes
+
+    object Test extends App {
+
+        def createTable(name: String) {
+            val config = HBaseConfiguration.create()
+            config.set("hbase.zookeeper.quorum", "hbase-docker")
+            config.set("hbase.zookeeper.property.clientPort", "2181")
+
+            val tableName = name
+            val hbaseAdmin = new HBaseAdmin(config)
+            val family = Bytes.toBytes("f1")
+
+            if (!hbaseAdmin.tableExists(tableName)) {
+                val desc = new HTableDescriptor(tableName)
+                desc.addFamily(new HColumnDescriptor(family))
+                hbaseAdmin.createTable(desc)
+                println("table created: " + tableName)
+            }
+
+            val table = new HTable(config, tableName)
+
+            val qualifier = Bytes.toBytes("column")
+
+            val value = 365
+
+            val put = new Put(Bytes.toBytes(UUID.randomUUID().toString))
+            put.add(family, qualifier, Bytes.toBytes(value.toString()))
+            table.put(put)
+            table.close()
+        }
+
+        createTable("mytable")
+    }
+
+
 Stop HBASE service
 ------------------
 
@@ -126,11 +170,13 @@ Stop HBASE service
 
 Start HBASE service
 -------------------
+The container should be stopped for this to work:
 
     $ docker-compose start
 
 Remove HBASE container
 ----------------------
+The container should be stopped for this to work:
 
     $ docker-compose rm
 

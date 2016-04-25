@@ -5,6 +5,7 @@
 
 sed -i 's/$HOSTNAME/'"$HOSTNAME"'/' /opt/hbase/conf/hbase-site.xml
 sed -i 's/$HOSTNAME/'"$HOSTNAME"'/' /opt/hbase/conf/zoo.cfg
+sed -i 's/localhost/'"$HOSTNAME"'/' /opt/hbase/conf/regionservers
 
 logs_dir=/data/logs
 
